@@ -1,0 +1,200 @@
+.container {
+  font-family: "Inter", sans-serif;
+  background: #f9fafc;
+  min-height: 100vh;
+  color: #222;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Navbar */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #1e293b;
+  color: #fff;
+  padding: 1rem 2rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.logo {
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.navItems {
+  display: flex;
+  gap: 1rem;
+}
+
+.nav_btn {
+  background: transparent;
+  border: none;
+  color: #cbd5e1;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.nav_btn:hover {
+  color: #fff;
+}
+
+.logout_btn {
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  padding: 0.4rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.logout_btn:hover {
+  background: #dc2626;
+}
+
+/* Header */
+.header {
+  text-align: center;
+  margin-top: 2rem;
+  padding: 0 2rem;
+}
+
+.subtitle {
+  color: #555;
+  margin-top: 0.5rem;
+  font-size: 1rem;
+}
+
+/* Header actions */
+.headerActions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 1rem 2rem;
+}
+
+/* Button styles */
+.primary_btn {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 0.5rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.primary_btn:hover {
+  background: #1d4ed8;
+}
+
+.delete_btn {
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.close_btn {
+  background: #64748b;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* Grid of instances */
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 2rem;
+}
+
+.card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+  width: 260px;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.1);
+}
+
+/* Popup styling */
+.popupOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.popupBox {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.popupBox input,
+.popupBox select {
+  padding: 0.6rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  width: 100%;
+}
+
+.popupDetails p {
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.popupActions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1rem;
+}
+
+/* Error */
+.error {
+  color: #ef4444;
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.noInstances {
+  text-align: center;
+  color: #555;
+  margin-top: 2rem;
+}
+.errorMessage {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+  padding: 10px;
+  margin-top: 10px;  /* Added margin-top to separate from the description */
+  border-radius: 4px;
+  font-size: 14px;
+  text-align: center;
+}
