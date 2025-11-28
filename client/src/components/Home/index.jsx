@@ -17,7 +17,7 @@ const Home = () => {
       }
 
       try {
-        const res = await axios.get("http://localhost:8080/api/users/profile", {
+        const res = await axios.get("https://sqlrunner-ude4.onrender.com/api/users/profile", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUsername(res.data.username);
