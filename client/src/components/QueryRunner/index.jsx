@@ -26,7 +26,7 @@ const QueryRunner = () => {
         return;
       }
       try {
-        const res = await axios.get("http://localhost:8080/api/instances", {
+        const res = await axios.get("https://sqlrunner-ude4.onrender.com/api/instances", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setInstances(res.data.instances || []);
@@ -56,7 +56,7 @@ const QueryRunner = () => {
 
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get(`http://localhost:8080/api/instances/${instanceId}`, {
+      const res = await axios.get(`https://sqlrunner-ude4.onrender.com/api/instances/${instanceId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -85,7 +85,7 @@ const QueryRunner = () => {
       const encodedSqlQuery = btoa(sqlQuery);
 
       const res = await axios.post(
-        "http://localhost:8080/api/instances/sqlrunner/run",
+        "https://sqlrunner-ude4.onrender.com/api/instances/sqlrunner/run",
         {
           instanceId: selectedInstanceId,
           encodedQuery: encodedSqlQuery,

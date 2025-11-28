@@ -48,7 +48,7 @@ const Signup = () => {
   const handleSendOtp = async () => {
     setIsSendingOtp(true); // Disable button during OTP sending
     try {
-      await axios.post("http://localhost:8080/api/users/send-otp", {
+      await axios.post("https://sqlrunner-ude4.onrender.com/api/users/send-otp", {
         email: data.email,
       });
       setOtpSent(true);
@@ -62,11 +62,11 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:8080/api/users/verify-otp", {
+      await axios.post("https://sqlrunner-ude4.onrender.com/api/users/verify-otp", {
         email: data.email,
         otp,
       });
-      await axios.post("http://localhost:8080/api/users", data);
+      await axios.post("https://sqlrunner-ude4.onrender.com/api/users", data);
       navigate("/login");
     } catch (error) {
       if (error.response) setError(error.response.data.message);
