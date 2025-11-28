@@ -12,7 +12,7 @@ connection();
 app.use(express.json());
 app.use(cors());
 app.use(cors({
-  origin: ['http://localhost:3000','http://192.168.0.137:3000'],// React app running on port 3000
+  origin: 'https://mainisqlrunner.netlify.app/',// React app running on port 3000
   methods: ['GET', 'POST','PATCH','PUT','DELETE'], // Allow specific methods
 //  allowedHeaders: ['Content-Type', 'Authorization'], // Allow certain headers
 }));
