@@ -10,64 +10,95 @@ const auth = require("../middleware/auth"); // Middleware to verify token
 
 // Existing Route: Add a new instance
 router.post("/", auth, async (req, res) => {
-  const { name, instanceUrl, username, password, description } = req.body;
+    const { name, instanceUrl, username, password, description } = req.body;
 
-  // Fusion BI Publisher SOAP WSDL
-  const WSDL_URL = `${instanceUrl}/xmlpserver/services/v2/CatalogService?wsdl`;
+    // Fusion BI Publisher SOAP WSDL
+    const WSDL_URL = `${instanceUrl}/xmlpserver/services/v2/CatalogService?wsdl`;
 
-  // Prepare args for uploadObject
-  const args = {
-    reportObjectAbsolutePathURL: `/~${username}/SQLRunner/SQLDataModel`,
-    objectType: 'xdmz',
-    objectZippedData: process.env.ObjectZippedData, 
-    userID: `${username}`,
-    password: password
-  };
+    // Prepare args for the first object (SQL Data Model)
+    const args = {
+        reportObjectAbsolutePathURL: `/Custom/SQLRunner/SQLDataModel`,
+        objectType: 'xdmz',
+        objectZippedData: process.env.ObjectZippedData,
+        userID: `${username}`,
+        password: password
+    };
 
-  try {
-    // Create SOAP client and call uploadObject method
-    soap.createClient(WSDL_URL, async function (err, client) {
-      if (err) {
-        console.error('❌ Error creating SOAP client:', err);
-        return res.status(500).json({ message: 'Failed to connect to Fusion instance', error: err });
-      }
+    // Prepare args for the second object (SQL Report)
+    const args1 = {
+        reportObjectAbsolutePathURL: `/Custom/SQLRunner/SQLReport`,
+        objectType: 'xdoz',
+        objectZippedData: process.env.ReportZippedData,
+        userID: `${username}`,
+        password: password
+    };
 
-      client.uploadObject(args, async function (err, result) {
-        const errorBody = err?.body || err?.toString();
+    try {
+        // Create SOAP client and call uploadObject method for both objects in parallel
+        soap.createClient(WSDL_URL, async function (err, client) {
+            if (err) {
+                console.error('❌ Error creating SOAP client:', err);
+                return res.status(500).json({ message: 'Failed to connect to Fusion instance', error: err });
+            }
 
-        // If success or already exists
-        if (!err || errorBody.includes('already exist')) {
-          try {
-            // Save instance details to DB
-            const newInstance = new Instance({
-              userId: req.user._id,
-              name,
-              instanceUrl,
-              username,
-              password,
-              description,
-            });
+            // Function to handle uploading of an object
+            const uploadObject = (args) => {
+                return new Promise((resolve, reject) => {
+                    client.uploadObject(args, (err, result) => {
+                        if (err) {
+                            // 1. Capture the error body or string representation
+                            const errorBody = err?.body || err?.toString();
 
-            await newInstance.save();
+                            // 2. Check for the "already exist!" fault string in the error body.
+                            if (errorBody && errorBody.includes("already exist!")) {
+                                // If the object already exists, treat this as a success and resolve.
+                                // We resolve with the *arguments* as a placeholder result since the API failed.
+                                resolve({ status: "Warning", message: "Object already existed, proceeding." });
+                            } else {
+                                // For any other type of error (connection, authentication, etc.), reject the promise.
+                                reject(errorBody);
+                            }
+                        } else {
+                            // Successful upload
+                            resolve(result);
+                        }
+                    });
+                });
+            };
 
-            return res.status(201).json({
-              message: "Instance added successfully!",
-              instance: newInstance
-            });
-          } catch (dbError) {
-            console.error("❌ DB Save Error:", dbError);
-            return res.status(500).json({ message: "Error saving instance", error: dbError });
-          }
-        } else {
-          console.error("❌ uploadObject failed:", errorBody);
-          return res.status(400).json({ message: "Fusion upload failed", error: errorBody });
-        }
-      });
-    });
-  } catch (outerError) {
-    console.error("❌ Unexpected error:", outerError);
-    return res.status(500).json({ message: "Unexpected error", error: outerError });
-  }
+            try {
+                // Upload both objects in parallel using Promise.all
+                const results = await Promise.all([
+                    uploadObject(args),
+                    uploadObject(args1)
+                ]);
+
+                // If successful for both objects (or they already existed), save instance details to DB
+                const newInstance = new Instance({
+                    userId: req.user._id,
+                    name,
+                    instanceUrl,
+                    username,
+                    password,
+                    description,
+                });
+
+                await newInstance.save();
+
+                return res.status(201).json({
+                    message: "Both objects uploaded and instance added successfully!",
+                    instance: newInstance,
+                    results: results // Return results of both upload attempts
+                });
+            } catch (uploadError) {
+                console.error("❌ uploadObject failed:", uploadError);
+                return res.status(400).json({ message: "Fusion upload failed", error: uploadError });
+            }
+        });
+    } catch (outerError) {
+        console.error("❌ Unexpected error:", outerError);
+        return res.status(500).json({ message: "Unexpected error", error: outerError });
+    }
 });
 
 // 🧩 Get all instances for logged-in user
@@ -107,7 +138,7 @@ router.delete("/:id", auth, async (req, res) => {
 router.post("/sqlrunner/run", auth, async (req, res) => {
   const { encodedQuery, instanceDetails } = req.body;
   const { instanceUrl, username, password } = instanceDetails;
-
+console.log(encodedQuery)
   // Decode the base64-encoded SQL query
   const decodedQuery = Buffer.from(encodedQuery, 'base64').toString('utf-8');
 
@@ -126,7 +157,7 @@ router.post("/sqlrunner/run", auth, async (req, res) => {
           }
         }
       },
-      reportAbsolutePath: `/~${username}/SQLRunner/SQLDataModel.xdm`,
+      reportAbsolutePath: `/Custom/SQLRunner/SQLReport.xdo`,
       sizeOfDataChunkDownload: -1
     },
     userID: username,
@@ -141,15 +172,16 @@ router.post("/sqlrunner/run", auth, async (req, res) => {
         return res.status(500).json({ error: 'Error creating SOAP client' });
       }
 
-      // Call the 'runDataModel' method for executing the SQL query
-      client.runDataModel(args, (err, result) => {
+      // Call the 'runReport' method for executing the SQL query
+      client.runReport(args, (err, result) => {
+        console.log(result);
         if (err) {
-          console.error('❌ runDataModel Error:', err.body || err);
+          console.error('❌ runReport Error:', err.body || err);
           return res.status(500).json({ error: 'Error running data model' });
         }
-
+          console.log(result)
         // Extract the base64 encoded reportBytes from the response
-        const reportBytes = result.runDataModelReturn.reportBytes;
+        const reportBytes = result.runReportReturn.reportBytes;
 
         // Decode the base64 reportBytes to XML
         const decodedXML = Buffer.from(reportBytes, 'base64').toString('utf-8');
