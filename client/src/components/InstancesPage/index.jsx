@@ -23,7 +23,7 @@ const InstancesPage = () => {
       if (!token) return setError("Please log in first.");
 
       try {
-        const response = await axios.get("http://localhost:8080/api/instances", {
+        const response = await axios.get("https://sqlrunner-ude4.onrender.com/api/instances", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setInstances(response.data.instances || []);
@@ -57,7 +57,7 @@ const InstancesPage = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:8080/api/instances",
+        "https://sqlrunner-ude4.onrender.com/api/instances",
         newInstance,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -77,7 +77,7 @@ const InstancesPage = () => {
     if (!window.confirm("Are you sure you want to delete this instance?")) return;
 
     try {
-      await axios.delete(`http://localhost:8080/api/instances/${id}`, {
+      await axios.delete(`https://sqlrunner-ude4.onrender.com/api/instances/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setInstances((prev) => prev.filter((i) => i._id !== id));
