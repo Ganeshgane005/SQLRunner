@@ -29,7 +29,7 @@ const authMiddleware = (req, res, next) => {
 
 // Helper function to send OTP via email
 const sendOTPEmail = async (email, otp) => {
- const BREVO_API_KEY = process.env.API_KEY; 
+ const BREVO_API_KEY = process.env.BRAVO_API_KEY; 
  const senderEmail = `ganeshmaini078@gmail.com`;
  const senderName = 'Ganesh';
  const brevoUrl = 'https://api.brevo.com/v3/smtp/email';
