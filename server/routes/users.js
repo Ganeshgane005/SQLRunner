@@ -1,9 +1,10 @@
 const router = require("express").Router();
 const { User, validate } = require('../model/user');
 const bcrypt = require('bcrypt');
-const nodemailer = require('nodemailer');
+//const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
+const axios = require('axios');
 
 // Store OTP and verification status temporarily (can be replaced with Redis or DB)
 let otpStorage = {};
@@ -28,45 +29,67 @@ const authMiddleware = (req, res, next) => {
 
 // Helper function to send OTP via email
 const sendOTPEmail = async (email, otp) => {
-  let transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: 'ganeshmaini078@gmail.com',
-      pass: 'gnzv dojm bvvb dzwa',
-    },
+ const BREVO_API_KEY = `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`; 
+ const senderEmail = `ganeshmaini078@gmail.com`;
+ const senderName = 'Ganesh';
+ const brevoUrl = 'https://api.brevo.com/v3/smtp/email';
+
+ const mailData = {
+  sender: {
+   name: senderName,
+   email: senderEmail,
+  },
+  to: [{ email: email }],
+  subject: 'Your OTP for Signup',
+  htmlContent: `<html><body>
+          <h2>One-Time Password (OTP)</h2>
+          <p>Your OTP for registration is: <strong>${otp}</strong></p>
+          <p>This OTP will expire in 5 minutes.</p>
+         </body></html>`,
+ };
+
+ try {
+  await axios.post(brevoUrl, mailData, {
+   headers: {
+    'accept': 'application/json',
+    'api-key': BREVO_API_KEY,
+    'content-type': 'application/json',
+   },
   });
-
-  let mailOptions = {
-    from: 'ganeshmaini078@gmail.com',
-    to: email,
-    subject: 'Your OTP for Signup',
-    text: `Your OTP is: ${otp}. It will expire in 5 minutes.`,
-  };
-
-  try {
-    await transporter.sendMail(mailOptions);
-    console.log(`OTP sent to ${email}`);
-  } catch (error) {
-    console.log(`Error sending OTP: ${error}`);
+  console.log(`OTP sent to ${email} via Brevo API`);
+ } catch (error) {
+  // Log a more detailed error message
+  console.error(`Error sending OTP via Brevo API: ${error.message}`);
+  if (error.response) {
+   console.error('Brevo API Response Error:', error.response.data);
+  } else {
+   console.error('Network Error:', error.code);
   }
+  // Important: Re-throw the error so the caller knows the operation failed
+  throw new Error('Failed to send OTP email.'); 
+ }
 };
 
 // Generate OTP and send email
 router.post('/send-otp', async (req, res) => {
-  const { email } = req.body;
-  const otp = crypto.randomInt(100000, 999999).toString();  // 6-digit OTP
-  const expirationTime = Date.now() + 5 * 60 * 1000;
+ const { email } = req.body;
+ const otp = crypto.randomInt(100000, 999999).toString(); // 6-digit OTP
+ const expirationTime = Date.now() + 5 * 60 * 1000;
 
-  otpStorage[email] = { otp, expirationTime };
+ otpStorage[email] = { otp, expirationTime };
 
-  // Optional: Auto-delete expired OTP after 5 minutes
-  setTimeout(() => {
-    delete otpStorage[email];
-  }, 5 * 60 * 1000);
+ // Optional: Auto-delete expired OTP after 5 minutes
+ setTimeout(() => {
+  delete otpStorage[email];
+ }, 5 * 60 * 1000);
 
-  await sendOTPEmail(email, otp);
-
+ try {
+  await sendOTPEmail(email, otp); // Call the updated function
   res.status(200).send({ message: 'OTP sent to your email!' });
+ } catch (error) {
+  // If sendOTPEmail fails, catch the re-thrown error and send a 500 response
+  res.status(500).send({ message: 'Failed to send OTP. Please try again.' });
+ }
 });
 
 // Verify OTP before proceeding to registration
